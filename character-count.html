@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Character Counter</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      background: #0f0f13;
+      color: #e8e8f0;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px 20px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+      background: linear-gradient(135deg, #a78bfa, #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      color: #6b6b80;
+      font-size: 0.95rem;
+      margin-bottom: 32px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 760px;
+      background: #17171f;
+      border: 1px solid #2a2a38;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 280px;
+      background: transparent;
+      border: none;
+      outline: none;
+      resize: vertical;
+      padding: 24px;
+      font-size: 1rem;
+      line-height: 1.7;
+      color: #e8e8f0;
+      font-family: inherit;
+    }
+
+    textarea::placeholder { color: #3d3d52; }
+
+    .divider { height: 1px; background: #2a2a38; }
+
+    .stats { display: flex; justify-content: center; }
+
+    .stat {
+      padding: 20px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .stat-value {
+      font-size: 1.9rem;
+      font-weight: 700;
+      line-height: 1;
+      color: #a78bfa;
+    }
+
+    .stat-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #55556a;
+      font-weight: 600;
+    }
+
+    .clear-btn {
+      display: block;
+      width: calc(100% - 48px);
+      margin: 0 24px 24px;
+      padding: 11px;
+      background: #23233a;
+      border: 1px solid #2a2a38;
+      border-radius: 8px;
+      color: #6b6b80;
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: 0.02em;
+    }
+
+    .clear-btn:hover {
+      background: #2d2d48;
+      color: #a78bfa;
+      border-color: #4a3f7a;
+    }
+
+    /* POPUP */
+    .popup-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+
+    .popup-overlay.show {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .popup {
+      background: #1e1e2c;
+      border: 1px solid #3a3a50;
+      border-radius: 16px;
+      padding: 28px 32px;
+      width: 90%;
+      max-width: 420px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+      transform: translateY(12px);
+      transition: transform 0.2s;
+      text-align: center;
+    }
+
+    .popup-overlay.show .popup {
+      transform: translateY(0);
+    }
+
+    .popup-icon {
+      font-size: 2.2rem;
+      margin-bottom: 12px;
+    }
+
+    .popup h2 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #e8e8f0;
+    }
+
+    .popup p {
+      font-size: 0.88rem;
+      color: #6b6b80;
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+
+    .popup-shortened {
+      background: #12121a;
+      border: 1px solid #2a2a38;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 1rem;
+      color: #a78bfa;
+      font-weight: 600;
+      margin-bottom: 20px;
+      word-break: break-all;
+    }
+
+    .copy-btn {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #a78bfa, #60a5fa);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      letter-spacing: 0.02em;
+    }
+
+    .copy-btn:hover { opacity: 0.88; }
+
+    .copy-btn.copied {
+      background: linear-gradient(135deg, #34d399, #059669);
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Character Counter</h1>
+  <p class="subtitle">Paste or type any text — limited to 29 characters</p>
+
+  <div class="card">
+    <textarea id="input" placeholder="Paste or type your text here…" spellcheck="false" autofocus></textarea>
+    <div class="divider"></div>
+    <div class="stats">
+      <div class="stat">
+        <span class="stat-value" id="total">0</span>
+        <span class="stat-label">Characters (with spaces)</span>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <button class="clear-btn" onclick="clearText()">Clear text</button>
+  </div>
+
+  <!-- Popup -->
+  <div class="popup-overlay" id="overlay">
+    <div class="popup">
+      <div class="popup-icon">✂️</div>
+      <h2>Text shortened to 29 characters</h2>
+      <p>Your text exceeded the limit. Here's the shortened version — copy it, then the input will reset.</p>
+      <div class="popup-shortened" id="shortenedText"></div>
+      <button class="copy-btn" id="copyBtn" onclick="copyAndReset()">Copy shortened text</button>
+    </div>
+  </div>
+
+  <script>
+    const input       = document.getElementById('input');
+    const total       = document.getElementById('total');
+    const overlay     = document.getElementById('overlay');
+    const shortenedEl = document.getElementById('shortenedText');
+    const copyBtn     = document.getElementById('copyBtn');
+
+    function update() {
+      total.textContent = input.value.length;
+    }
+
+    function clearText() {
+      input.value = '';
+      update();
+      input.focus();
+    }
+
+    function showPopup(shortened) {
+      shortenedEl.textContent = shortened;
+      copyBtn.textContent = 'Copy shortened text';
+      copyBtn.classList.remove('copied');
+      overlay.classList.add('show');
+    }
+
+    function fallbackCopy(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+
+    function resetAll() {
+      overlay.classList.remove('show');
+      input.value = '';
+      update();
+      input.focus();
+    }
+
+    function copyAndReset() {
+      const text = shortenedEl.textContent;
+      copyBtn.textContent = '✓ Copied!';
+      copyBtn.classList.add('copied');
+
+      try {
+        navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
+      } catch(e) {
+        fallbackCopy(text);
+      }
+
+      setTimeout(resetAll, 700);
+    }
+
+    input.addEventListener('input', () => {
+      const val = input.value;
+      if (val.length > 29) {
+        const shortened = val.slice(0, 29);
+        input.value = shortened;
+        update();
+        showPopup(shortened);
+      } else {
+        update();
+      }
+    });
+
+    update();
+  </script>
+</body>
+</html>
